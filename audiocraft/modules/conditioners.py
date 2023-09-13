@@ -513,6 +513,7 @@ class InstrumentalConditioner(WaveformConditioner):
     Args:
         output_dim (int): Output dimension for the conditioner.
         sample_rate (int): Sample rate for the chroma extractor.
+        compression_model (CompressionModel): Model used to convert instrumental into tokens.
         duration (int): duration used during training. This is later used for correct padding
             in case we are using chroma as prefix.
         match_len_on_eval (bool, optional): if True then all chromas are padded to the training
@@ -525,7 +526,7 @@ class InstrumentalConditioner(WaveformConditioner):
         **kwargs: Additional parameters for the chroma extractor.
     """
     def __init__(self, output_dim: int, sample_rate: int, compression_model: CompressionModel,
-                 duration: float, match_len_on_eval: bool = True, eval_wavs: tp.Optional[str] = None,
+                 duration: tp.Optional[float] = None, match_len_on_eval: bool = True, eval_wavs: tp.Optional[str] = None,
                  n_eval_wavs: int = 0, cache_path: tp.Optional[tp.Union[str, Path]] = None,
                  device: tp.Union[torch.device, str] = 'cpu', **kwargs):
         # initialize input and output dimensions
@@ -558,7 +559,7 @@ class InstrumentalConditioner(WaveformConditioner):
         logger.info(f"Loading evaluation wavs from {path}")
         from audiocraft.data.audio_dataset import AudioDataset
         dataset: AudioDataset = AudioDataset.from_meta(
-            path, segment_duration=self.duration, min_audio_duration=self.duration,
+            path,
             sample_rate=self.sample_rate, channels=1)
 
         if len(dataset) > 0:
@@ -602,22 +603,19 @@ class InstrumentalConditioner(WaveformConditioner):
         tokens = self._compute_wav_embedding(wav, self.sample_rate)[0]
         return tokens
 
-    def _extract_token_chunk(self, full_chroma: torch.Tensor, x: WavCondition, idx: int) -> torch.Tensor:
+    def _extract_token_chunk(self, full_tokens: torch.Tensor, x: WavCondition, idx: int) -> torch.Tensor:
         """Extract a chunk of chroma from the full chroma derived from the full waveform."""
-
-        ## TODO: adapt for encodec tokenizer
-
 
         wav_length = x.wav.shape[-1]
         seek_time = x.seek_time[idx]
         assert seek_time is not None, (
             "WavCondition seek_time is required "
-            "when extracting chroma chunks from pre-computed chroma.")
-        full_chroma = full_chroma.float()
+            "when extracting encodec token chunks from pre-computed conditional.")
+        full_tokens = full_tokens.float()
         frame_rate = self.sample_rate / self._downsampling_factor()
         target_length = int(frame_rate * wav_length / self.sample_rate)
         index = int(frame_rate * seek_time)
-        out = full_chroma[index: index + target_length]
+        out = full_tokens[index: index + target_length]
         out = F.pad(out[None], (0, 0, 0, target_length - out.shape[0]))[0]
         return out.to(self.device)
 
@@ -635,26 +633,26 @@ class InstrumentalConditioner(WaveformConditioner):
         no_undefined_paths = all(p is not None for p in x.path)
         no_nullified_cond = x.wav.shape[-1] > 1
         if sampled_wav is not None:
-            chroma = self._compute_wav_embedding(sampled_wav, self.sample_rate)
+            tokens = self._compute_wav_embedding(sampled_wav, self.sample_rate)
         elif self.cache is not None and no_undefined_paths and no_nullified_cond:
             paths = [Path(p) for p in x.path if p is not None]
-            chroma = self.cache.get_embed_from_cache(paths, x)
+            tokens = self.cache.get_embed_from_cache(paths, x)
         else:
             assert all(sr == x.sample_rate[0] for sr in x.sample_rate), "All sample rates in batch should be equal."
-            chroma = self._compute_wav_embedding(x.wav, x.sample_rate[0])
+            tokens = self._compute_wav_embedding(x.wav, x.sample_rate[0])
 
-        if self.match_len_on_eval:
-            B, T, C = chroma.shape
-            if T > self.chroma_len:
-                chroma = chroma[:, :self.chroma_len]
-                logger.debug(f"Chroma was truncated to match length! ({T} -> {chroma.shape[1]})")
-            elif T < self.chroma_len:
-                n_repeat = int(math.ceil(self.chroma_len / T))
-                chroma = chroma.repeat(1, n_repeat, 1)
-                chroma = chroma[:, :self.chroma_len]
-                logger.debug(f"Chroma was repeated to match length! ({T} -> {chroma.shape[1]})")
+        # if self.match_len_on_eval:
+        #     B, T, C = tokens.shape
+        #     if T > self.chroma_len:
+        #        tokens = tokens[:, :self.chroma_len]
+        #         logger.debug(f"tokens was truncated to match length! ({T} -> {chroma.shape[1]})")
+        #     elif T < self.chroma_len:
+        #         n_repeat = int(math.ceil(self.chroma_len / T))
+        #         tokens = tokens.repeat(1, n_repeat, 1)
+        #         tokens = tokens[:, :self.chroma_len]
+        #         logger.debug(f"Chroma was repeated to match length! ({T} -> {chroma.shape[1]})")
 
-        return chroma
+        return tokens
 
     def tokenize(self, x: WavCondition) -> WavCondition:
         """Apply WavConditioner tokenization and populate cache if needed."""

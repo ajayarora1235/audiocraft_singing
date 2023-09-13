@@ -32,6 +32,7 @@ from ..modules.conditioners import (
     ConditionFuser,
     ConditioningProvider,
     LUTConditioner,
+    InstrumentalConditioner,
     T5Conditioner,
 )
 from .unet import DiffusionUnet
@@ -123,8 +124,8 @@ def get_conditioner_provider(output_dim: int, cfg: omegaconf.DictConfig) -> Cond
     """Instantiate a conditioning model."""
     device = cfg.device
     duration = cfg.dataset.segment_duration
-    cfg = getattr(cfg, 'conditioners')
-    dict_cfg = {} if cfg is None else dict_from_config(cfg)
+    sub_cfg = getattr(cfg, 'conditioners')
+    dict_cfg = {} if sub_cfg is None else dict_from_config(sub_cfg)
     conditioners: tp.Dict[str, BaseConditioner] = {}
     condition_provider_args = dict_cfg.pop('args', {})
     condition_provider_args.pop('merge_text_conditions_p', None)
@@ -140,6 +141,14 @@ def get_conditioner_provider(output_dim: int, cfg: omegaconf.DictConfig) -> Cond
         elif model_type == 'chroma_stem':
             conditioners[str(cond)] = ChromaStemConditioner(
                 output_dim=output_dim,
+                duration=duration,
+                device=device,
+                **model_args
+            )
+        elif model_type == 'instrumental':
+            conditioners[str(cond)] = InstrumentalConditioner(
+                output_dim=output_dim,
+                compression_model=get_compression_model(cfg)
                 duration=duration,
                 device=device,
                 **model_args
