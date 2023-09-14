@@ -28,6 +28,8 @@ from ..modules.conditioners import (
     WavCondition,
 )
 from ..utils.utils import warn_once
+from .audio import audio_read, audio_info
+from .audio_utils import convert_audio
 
 
 logger = logging.getLogger(__name__)
@@ -235,8 +237,22 @@ class MusicDataset(InfoAudioDataset):
         else:
             music_info = MusicInfo.from_dict(info_data, fields_required=False)
 
+                # Replace "_vocals.wav" with "_instrumental.wav" in the path
+        if info.meta.path.endswith("_vocals.wav"):
+            instrumental_path = Path(info.meta.path.replace("_vocals.wav", "_instrumental.wav"))
+        else:
+            instrumental_path = None
+
+        # Check if the instrumental path exists
+        if instrumental_path and instrumental_path.exists():
+            instrumental_wav, sr = audio_read(instrumental_path)
+            instrumental_wav = convert_audio(instrumental_wav, sr, self.sample_rate, self.channels)
+            wav_condition = instrumental_wav[None]
+        else:
+            wav_condition = wav[None]
+
         music_info.self_wav = WavCondition(
-            wav=wav[None], length=torch.tensor([info.n_frames]),
+            wav=wav_condition, length=torch.tensor([info.n_frames]),
             sample_rate=[info.sample_rate], path=[info.meta.path], seek_time=[info.seek_time])
 
         for att in self.joint_embed_attributes:

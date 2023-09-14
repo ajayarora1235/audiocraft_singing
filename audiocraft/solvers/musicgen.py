@@ -457,8 +457,8 @@ class MusicGenSolver(base.StandardSolver):
         assert gen_tokens.dim() == 3
 
         ## TODO: comeup with a better way to specify whether to do this or not.
-        # MBD = models.MultiBandDiffusion.get_mbd_musicgen()
-        # gen_audio = MBD.tokens_to_wav(gen_tokens)
+        MBD = models.MultiBandDiffusion.get_mbd_musicgen()
+        gen_audio = MBD.tokens_to_wav(gen_tokens)
 
         gen_audio = self.compression_model.decode(gen_tokens, None)
 

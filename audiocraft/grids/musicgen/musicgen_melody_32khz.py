@@ -13,7 +13,8 @@ def explorer(launcher):
     partitions = AudioCraftEnvironment.get_slurm_partitions(['team', 'global'])
     launcher.slurm_(gpus=32, partition=partitions)
     launcher.bind_(solver='musicgen/musicgen_melody_32khz')
-    # replace this by the desired music dataset
+    ## TODO: figure out why dataset is passed here instead of a config,
+    ## and replace this by the desired music dataset
     launcher.bind_(dset='internal/music_400k_32khz')
 
     fsdp = {'autocast': False, 'fsdp.use': True}
