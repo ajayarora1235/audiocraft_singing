@@ -32,7 +32,6 @@ from ..data.audio import audio_read
 from ..data.audio_dataset import SegmentInfo
 from ..data.audio_utils import convert_audio
 from ..environment import AudioCraftEnvironment
-from ..models.encodec import CompressionModel
 from ..quantization import ResidualVectorQuantizer
 from ..utils.autocast import TorchAutocast
 from ..utils.cache import EmbeddingCache
@@ -513,7 +512,7 @@ class InstrumentalConditioner(WaveformConditioner):
     Args:
         output_dim (int): Output dimension for the conditioner.
         sample_rate (int): Sample rate for the chroma extractor.
-        compression_model (CompressionModel): Model used to convert instrumental into tokens.
+        compression_model: Model used to convert instrumental into tokens.
         duration (int): duration used during training. This is later used for correct padding
             in case we are using chroma as prefix.
         match_len_on_eval (bool, optional): if True then all chromas are padded to the training
@@ -525,7 +524,7 @@ class InstrumentalConditioner(WaveformConditioner):
         device (tp.Union[torch.device, str], optional): Device for the conditioner.
         **kwargs: Additional parameters for the chroma extractor.
     """
-    def __init__(self, output_dim: int, sample_rate: int, compression_model: CompressionModel,
+    def __init__(self, output_dim: int, sample_rate: int, compression_model,
                  duration: tp.Optional[float] = None, match_len_on_eval: bool = True, eval_wavs: tp.Optional[str] = None,
                  n_eval_wavs: int = 0, cache_path: tp.Optional[tp.Union[str, Path]] = None,
                  device: tp.Union[torch.device, str] = 'cpu', **kwargs):
