@@ -4,7 +4,7 @@ datasource:
   max_sample_rate: 32000
   max_channels: 1
 
-  train: egs/music/songsinger_5k_32khz/train
-  valid: egs/music/songsinger_5k_32khz/valid
-  evaluate: egs/music/songsinger_5k_32khz/test
-  generate: egs/music/songsinger_5k_32khz/test # identical to evaluate
+  train: /content/drive/MyDrive/musicgen_dataset
+  valid: /content/drive/MyDrive/musicgen_dataset
+  evaluate: /content/drive/MyDrive/musicgen_dataset
+  generate: /content/drive/MyDrive/musicgen_dataset # identical to evaluate

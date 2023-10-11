@@ -7,6 +7,10 @@ defaults:
   - /solver/musicgen/evaluation: none
   - override /dset: audio/default
 
+device: cuda
+dtype: float32
+seed: 2036
+show: false 
 autocast: true
 autocast_dtype: float16
 
