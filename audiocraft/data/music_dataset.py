@@ -249,6 +249,7 @@ class MusicDataset(InfoAudioDataset):
             instrumental_wav, sr = audio_read(instrumental_path)
             instrumental_wav = convert_audio(instrumental_wav, sr, self.sample_rate, self.channels)
             wav_condition = instrumental_wav[None]
+            instrumental_path = str(instrumental_path)
         else:
             wav_condition = wav[None]
             instrumental_path = info.meta.path
