@@ -146,9 +146,10 @@ def get_conditioner_provider(output_dim: int, cfg: omegaconf.DictConfig) -> Cond
                 **model_args
             )
         elif model_type == 'instrumental':
+            name = cfg.compression_model_checkpoint.split('/', 3)[-1]
             conditioners[str(cond)] = InstrumentalConditioner(
                 output_dim=output_dim,
-                compression_model=get_compression_model(cfg),
+                compression_model=CompressionModel.get_pretrained(name, device),
                 duration=duration,
                 device=device,
                 **model_args
