@@ -12,6 +12,7 @@ import flashy
 import math
 import omegaconf
 import torch
+from torch import nn
 from torch.nn import functional as F
 
 from . import base, builders
@@ -190,6 +191,19 @@ class MusicGenSolver(base.StandardSolver):
                 'model': lm_pkg['best_state'],
             },
         }
+
+        if name == "facebook/musicgen-melody":
+            # Create a new linear layer
+            new_output_proj = nn.Linear(512, 1536)
+
+            # Initialize the weights of the new layer
+            torch.nn.init.xavier_uniform_(new_output_proj.weight)
+
+            state['best_state']['model']['condition_provider.conditioners.self_wav.output_proj.weight'] = new_output_proj.weight
+            state['best_state']['model']['condition_provider.conditioners.self_wav.output_proj.bias'] = new_output_proj.bias
+
+            del state['best_state']['model']['condition_provider.conditioners.self_wav.chroma.spec.window']
+                        
         return state
 
     def _compute_cross_entropy(
