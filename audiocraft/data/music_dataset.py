@@ -238,6 +238,7 @@ class MusicDataset(InfoAudioDataset):
             music_info = MusicInfo.from_dict(info_data, fields_required=False)
 
                 # Replace "_vocals.wav" with "_instrumental.wav" in the path
+        assert info.meta.path == music_info.meta.path
         if info.meta.path.endswith("_voc.mp3"):
             instrumental_path = Path(info.meta.path.replace("_voc.mp3", "_inst.mp3"))
         else:
@@ -250,10 +251,11 @@ class MusicDataset(InfoAudioDataset):
             wav_condition = instrumental_wav[None]
         else:
             wav_condition = wav[None]
+            instrumental_path = info.meta.path
 
         music_info.self_wav = WavCondition(
             wav=wav_condition, length=torch.tensor([info.n_frames]),
-            sample_rate=[info.sample_rate], path=[info.meta.path], seek_time=[info.seek_time])
+            sample_rate=[info.sample_rate], path=[instrumental_path], seek_time=[info.seek_time])
 
         for att in self.joint_embed_attributes:
             att_value = getattr(music_info, att)
