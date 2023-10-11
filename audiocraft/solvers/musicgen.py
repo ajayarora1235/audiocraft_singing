@@ -460,7 +460,7 @@ class MusicGenSolver(base.StandardSolver):
         MBD = models.MultiBandDiffusion.get_mbd_musicgen()
         gen_audio = MBD.tokens_to_wav(gen_tokens)
 
-        gen_audio = self.compression_model.decode(gen_tokens, None)
+        # gen_audio = self.compression_model.decode(gen_tokens, None)
 
         bench_end = time.time()
         gen_outputs = {

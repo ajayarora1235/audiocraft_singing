@@ -529,7 +529,7 @@ class InstrumentalConditioner(WaveformConditioner):
                  n_eval_wavs: int = 0, cache_path: tp.Optional[tp.Union[str, Path]] = None,
                  device: tp.Union[torch.device, str] = 'cpu', **kwargs):
         # initialize input and output dimensions
-        super().__init__(output_dim=output_dim, device=device)
+        super().__init__(dim=512, output_dim=output_dim, device=device)
 
         self.autocast = TorchAutocast(enabled=device != 'cpu', device_type=self.device, dtype=torch.float32)
         self.sample_rate = sample_rate
@@ -586,7 +586,7 @@ class InstrumentalConditioner(WaveformConditioner):
     def _extract_tokens(self, wav: torch.Tensor) -> torch.Tensor:
         """Extract encodec tokens from the waveform"""
         with self.autocast:
-            return self.compression_model.encode(wav)[0]
+            return einops.rearrange(self.compression_model.encode(wav)[0], 'b d t -> b t d')
 
     @torch.no_grad()
     def _compute_wav_embedding(self, wav: torch.Tensor, sample_rate: int) -> torch.Tensor:

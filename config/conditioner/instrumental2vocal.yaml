@@ -15,8 +15,8 @@ fuser:
   cross_attention_pos_emb: false
   cross_attention_pos_emb_scale: 1
   sum: []
-  prepend: [self_wav]
-  cross: [description]
+  prepend: [self_wav, description]
+  cross: []
   input_interpolate: []
 
 conditioners:
