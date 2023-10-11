@@ -238,8 +238,8 @@ class MusicDataset(InfoAudioDataset):
             music_info = MusicInfo.from_dict(info_data, fields_required=False)
 
                 # Replace "_vocals.wav" with "_instrumental.wav" in the path
-        if info.meta.path.endswith("_vocals.wav"):
-            instrumental_path = Path(info.meta.path.replace("_vocals.wav", "_instrumental.wav"))
+        if info.meta.path.endswith("_voc.mp3"):
+            instrumental_path = Path(info.meta.path.replace("_voc.mp3", "_inst.mp3"))
         else:
             instrumental_path = None
 
