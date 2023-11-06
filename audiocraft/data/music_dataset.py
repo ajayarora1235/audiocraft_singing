@@ -22,6 +22,7 @@ from .info_audio_dataset import (
     get_keyword,
     get_string
 )
+from .zip import PathInZip, open_file_in_zip
 from ..modules.conditioners import (
     ConditioningAttributes,
     JointEmbedCondition,
@@ -222,11 +223,19 @@ class MusicDataset(InfoAudioDataset):
     def __getitem__(self, index):
         wav, info = super().__getitem__(index)
         info_data = info.to_dict()
-        music_info_path = Path(info.meta.path).with_suffix('.json')
 
-        if Path(music_info_path).exists():
-            with open(music_info_path, 'r') as json_file:
-                music_data = json.load(json_file)
+        # music_info_path = Path(info.meta.path).with_suffix('.json')
+
+        #### INSTEAD, have music_data be a json within a zipped file.
+        # info.meta.info_path should be 'dataset/songsinger/audio_metadata.zip:/data/[track_name].json'
+        music_info_path = info.meta.info_path
+        
+        # if Path(music_info_path).exists():
+        if music_info_path is not None:
+            # with open(music_info_path, 'r') as json_file:
+            with open_file_in_zip(music_info_path, 'r') as data:
+                music_data = json.loads(data.decode("utf-8"))
+                # music_data = json.load(json_file)
                 music_data.update(info_data)
                 music_info = MusicInfo.from_dict(music_data, fields_required=self.info_fields_required)
             if self.paraphraser is not None:
@@ -237,7 +246,7 @@ class MusicDataset(InfoAudioDataset):
         else:
             music_info = MusicInfo.from_dict(info_data, fields_required=False)
 
-                # Replace "_vocals.wav" with "_instrumental.wav" in the path
+        # Replace "_vocals.wav" with "_instrumental.wav" in the path
         assert info.meta.path == music_info.meta.path
         if info.meta.path.endswith("_voc.mp3"):
             instrumental_path = Path(info.meta.path.replace("_voc.mp3", "_inst.mp3"))

@@ -583,10 +583,10 @@ class InstrumentalConditioner(WaveformConditioner):
             out = self.eval_wavs.repeat(num_samples // total_eval_wavs + 1, 1, 1)
         return out[torch.randperm(len(out))][:num_samples]
     
-    def _get_noisy_wav(self, wav: torch.Tensor, sample_rate: int):
+    def _get_noisy_wav(self, wav: torch.Tensor, sample_rate: int, scale: float = 0.00705):
         """Add noise to wav to cover any vocal artifacts remaining in instrumental"""
         noise = torch.randn_like(wav)
-        new_wav = wav + noise * 0.01
+        new_wav = wav + noise * scale
         return new_wav.clamp(-1, 1)
 
 
@@ -598,7 +598,7 @@ class InstrumentalConditioner(WaveformConditioner):
     @torch.no_grad()
     def _compute_wav_embedding(self, wav: torch.Tensor, sample_rate: int) -> torch.Tensor:
         """Compute wav embedding, applying stem and chroma extraction."""
-        noisy_wav = self._get_noisy_wav)wav, sample_rate)
+        noisy_wav = self._get_noisy_wav(wav, sample_rate)
         return self._extract_tokens(noisy_wav)
 
     @torch.no_grad()

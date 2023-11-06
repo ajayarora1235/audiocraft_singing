@@ -4,7 +4,7 @@ datasource:
   max_sample_rate: 32000
   max_channels: 1
 
-  train: egs/music/songsinger_5k_32khz
-  valid: egs/music/songsinger_5k_32khz
-  evaluate: egs/music/songsinger_5k_32khz
-  generate: egs/music/songsinger_5k_32khz # identical to evaluate
+  train: egs/music/songsinger_5k_32khz/train.jsonl
+  valid: egs/music/songsinger_5k_32khz/valid.jsonl
+  evaluate: egs/music/songsinger_5k_32khz/test.jsonl
+  generate: egs/music/songsinger_5k_32khz/test.jsonl # identical to evaluate
