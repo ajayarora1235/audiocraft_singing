@@ -141,12 +141,12 @@ def audio_read(filepath: tp.Union[str, Path], seek_time: float = 0.,
         and duration <= 0 and seek_time == 0
     ):
         # Torchaudio is faster if we load an entire file at once.
-        print('using torchaudio')
-        print(fp, duration, seek_time)
+        # print('using torchaudio')
+        # print(fp, duration, seek_time)
         wav, sr = ta.load(fp)
     else:
-        print('using _av_read')
-        print(filepath, seek_time, duration)
+        # print('using _av_read')
+        # print(filepath, seek_time, duration)
         wav, sr = _av_read(filepath, seek_time, duration)
     if pad and duration > 0:
         expected_frames = int(duration * sr)

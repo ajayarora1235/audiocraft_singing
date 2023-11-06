@@ -37,7 +37,7 @@ generate:
     top_p: 0.0
 
 optim:
-  epochs: 50
+  epochs: 10
   optimizer: dadam
   lr: 1
   ema:
@@ -46,7 +46,11 @@ optim:
     device: cuda
 
 logging:
-  log_tensorboard: true
+  log_wandb: true
+
+wandb:
+  project: songsinger
+  name: noise-experiment-2
 
 schedule:
   lr_scheduler: cosine
