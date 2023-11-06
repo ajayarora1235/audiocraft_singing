@@ -234,7 +234,8 @@ class MusicDataset(InfoAudioDataset):
         if music_info_path is not None:
             # with open(music_info_path, 'r') as json_file:
             with open_file_in_zip(music_info_path, 'r') as data:
-                music_data = json.loads(data.decode("utf-8"))
+                result = data.read()
+                music_data = json.loads(result.decode("UTF-8"))
                 # music_data = json.load(json_file)
                 music_data.update(info_data)
                 music_info = MusicInfo.from_dict(music_data, fields_required=self.info_fields_required)
