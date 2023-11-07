@@ -27,6 +27,7 @@ def explorer(launcher):
     wd_low = {'conditioners.description.t5.word_dropout': 0.2}
 
     adam = {'optim.optimizer': 'adamw', 'optim.lr': 1e-4, 'optim.epochs': 10}
+    dataset = {'dataset.batch_size': 2, 'dataset.sample_on_weight': False, 'dataset.sample_on_duration': False}
     wandb = {'logging.log_wandb': True, 'wandb.project': 'songsinger', 'wandb.name': 'noise-experiment-1'}
 
     # cache_path = {'conditioners.self_wav.chroma_stem.cache_path':
@@ -61,7 +62,7 @@ def explorer(launcher):
     launcher.slurm_(gpus=4).bind_(label='4gpus')
     with launcher.job_array():
         sub = launcher.bind()
-        sub(medium, cfg_low, wd_low, adam, wandb, {'optim.max_norm': 1})
+        sub(medium, cfg_low, wd_low, adam, wandb, dataset, {'optim.max_norm': 1})
 
     # launcher.slurm_(gpus=96).bind_(label='96gpus')
     # with launcher.job_array():

@@ -9,19 +9,27 @@ s3_client = session.client('s3',
                             aws_secret_access_key=secret_key,
                             endpoint_url=f"https://{account_id}.r2.cloudflarestorage.com")
 
-directory = 'musicgen/'  # Replace with the directory name
+directory = 'musicgen_dataset/'  # Replace with the directory name
 
 # Specify the local directory where files will be downloaded
 local_directory = './'  # Current directory
 
 # List objects in the S3 directory
-objects = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=directory)
+paginator = s3_client.get_paginator('list_objects_v2')
+pages = paginator.paginate(Bucket=bucket_name, Prefix=directory)
 
-# Download each file from S3 to the local directory
-for obj in objects.get('Contents', []):
-    key = obj['Key']
-    local_file_path = os.path.join(local_directory, os.path.basename(key))
-    s3_client.download_file(bucket_name, key, local_file_path)
-    print(f"Downloaded: {key} to {local_file_path}")
+page_num = 0
+dataset_list = []
+for page in pages:
+    page_num += 1
+    print(page_num)
+
+    # Download each file from S3 to the local directory
+    for obj in page.get('Contents', []):
+        key = obj['Key']
+        if key[-4:] != "json":
+            local_file_path = os.path.join(local_directory, os.path.basename(key))
+            s3_client.download_file(bucket_name, key, local_file_path)
+            print(f"Downloaded: {key} to {local_file_path}")
 
 print("All files downloaded successfully.")
