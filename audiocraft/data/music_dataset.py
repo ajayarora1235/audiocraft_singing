@@ -9,6 +9,7 @@ from dataclasses import dataclass, field, fields, replace
 import gzip
 import json
 import logging
+import os
 from pathlib import Path
 import random
 import typing as tp
@@ -250,16 +251,16 @@ class MusicDataset(InfoAudioDataset):
         # Replace "_vocals.wav" with "_instrumental.wav" in the path
         assert info.meta.path == music_info.meta.path
         if info.meta.path.endswith("_voc.mp3"):
-            instrumental_path = Path(info.meta.path.replace("_voc.mp3", "_inst.mp3"))
+            instrumental_path = info.meta.path.replace("_voc.mp3", "_inst.mp3")
         else:
             instrumental_path = None
 
         # Check if the instrumental path exists
-        if instrumental_path and instrumental_path.exists():
+        if instrumental_path and os.path.isfile(instrumental_path):
             instrumental_wav, sr = audio_read(instrumental_path)
             instrumental_wav = convert_audio(instrumental_wav, sr, self.sample_rate, self.channels)
             wav_condition = instrumental_wav[None]
-            instrumental_path = str(instrumental_path)
+            instrumental_path = instrumental_path
         else:
             wav_condition = wav[None]
             instrumental_path = info.meta.path
