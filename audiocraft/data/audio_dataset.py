@@ -138,7 +138,8 @@ def _resolve_audio_meta(m: AudioMeta, fast: bool = True) -> AudioMeta:
     if not is_abs(m.path):
         m.path = dora.git_save.to_absolute_path(m.path)
     if m.info_path is not None and not is_abs(m.info_path.zip_path):
-        m.info_path.zip_path = dora.git_save.to_absolute_path(m.path)
+        # print('this resolving meta was called')
+        m.info_path.zip_path = dora.git_save.to_absolute_path(m.info_path.zip_path)
     return m
 
 

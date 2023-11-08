@@ -29,7 +29,13 @@ for page in pages:
         key = obj['Key']
         if key[-4:] != "json":
             local_file_path = os.path.join(local_directory, os.path.basename(key))
-            s3_client.download_file(bucket_name, key, local_file_path)
-            print(f"Downloaded: {key} to {local_file_path}")
+            if not os.path.isfile(local_file_path):
+                s3_client.download_file(bucket_name, key, local_file_path)
+                print(f"Downloaded: {key} to {local_file_path}")
+        else:
+            local_file_path = os.path.join('./audio_metadata/', os.path.basename(key))
+            if not os.path.isfile(local_file_path):
+                s3_client.download_file(bucket_name, key, local_file_path)
+                print(f"Downloaded: {key} to {local_file_path}")
 
 print("All files downloaded successfully.")
