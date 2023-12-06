@@ -249,9 +249,15 @@ class MusicDataset(InfoAudioDataset):
             music_info = MusicInfo.from_dict(info_data, fields_required=False)
 
         # Replace "_vocals.wav" with "_instrumental.wav" in the path
+        suffixes = ("_vo.mp3", "_vd.mp3", "_do.mp3", "_o.mp3", "_d.mp3", "_v.mp3", "_vdo.mp3")
         assert info.meta.path == music_info.meta.path
         if info.meta.path.endswith("_voc.mp3"):
             instrumental_path = info.meta.path.replace("_voc.mp3", "_inst.mp3")
+        elif info.meta.path.endswith(suffixes):
+            for suffix in suffixes:
+                if info.meta.path.endswith(suffix):
+                    # Replace the specific suffix with "_b.mp3"
+                    return info.meta.path[:-len(suffix)] + "_b.mp3"
         else:
             instrumental_path = None
 
