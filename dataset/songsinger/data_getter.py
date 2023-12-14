@@ -9,7 +9,7 @@ s3_client = session.client('s3',
                             aws_secret_access_key=secret_key,
                             endpoint_url=f"https://{account_id}.r2.cloudflarestorage.com")
 
-directory = 'musicgen_dataset/'  # Replace with the directory name
+directory = 'musicgen_bass/'  # Replace with the directory name
 
 # Specify the local directory where files will be downloaded
 local_directory = './'  # Current directory
