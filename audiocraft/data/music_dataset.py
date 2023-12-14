@@ -46,6 +46,12 @@ class MusicInfo(AudioInfo):
     artist: tp.Optional[str] = None  # anonymized artist id, used to ensure no overlap between splits
     key: tp.Optional[str] = None
     bpm: tp.Optional[float] = None
+    chords: tp.Optional[list] = None
+    silence: tp.Optional[str] = None
+    playing_style: tp.Optional[str] = None
+    playing_feel: tp.Optional[str] = None
+    rhythm: tp.Optional[str] = None
+    slides: tp.Optional[str] = None
     genre: tp.Optional[str] = None
     moods: tp.Optional[list] = None
     keywords: tp.Optional[list] = None
@@ -133,7 +139,7 @@ def augment_music_info_description(music_info: MusicInfo, merge_text_p: float = 
         MusicInfo: The MusicInfo with augmented textual description.
     """
     def is_valid_field(field_name: str, field_value: tp.Any) -> bool:
-        valid_field_name = field_name in ['key', 'bpm', 'genre', 'moods', 'instrument', 'keywords']
+        valid_field_name = field_name in ['key', 'bpm', 'genre', 'instrument', 'chords', 'silence', 'playing_style' ,'playing_feel', 'rhythm']
         valid_field_value = field_value is not None and isinstance(field_value, (int, float, str, list))
         keep_field = random.uniform(0, 1) < drop_other_p
         return valid_field_name and valid_field_value and keep_field
@@ -230,6 +236,7 @@ class MusicDataset(InfoAudioDataset):
         #### INSTEAD, have music_data be a json within a zipped file.
         # info.meta.info_path should be 'dataset/songsinger/audio_metadata.zip:/data/[track_name].json'
         music_info_path = info.meta.info_path
+        bass_experiment = True
         
         # if Path(music_info_path).exists():
         if music_info_path is not None:
@@ -257,7 +264,7 @@ class MusicDataset(InfoAudioDataset):
             for suffix in suffixes:
                 if info.meta.path.endswith(suffix):
                     # Replace the specific suffix with "_b.mp3"
-                    return info.meta.path[:-len(suffix)] + "_b.mp3"
+                    instrumental_path = info.meta.path[:-len(suffix)] + "_b.mp3"
         else:
             instrumental_path = None
 
@@ -270,6 +277,14 @@ class MusicDataset(InfoAudioDataset):
         else:
             wav_condition = wav[None]
             instrumental_path = info.meta.path
+
+        if bass_experiment:
+            # Switch wav and instrumental wav
+            wav, instrumental_wav = instrumental_wav, wav
+            # Redefine wav_condition to be instrumental_wav[None]
+            wav_condition = instrumental_wav[None]
+            # Redefine info.meta.path to be instrumental path, instrumental_path to be info.meta.path
+            info.meta.path, instrumental_path = instrumental_path, info.meta.path
 
         music_info.self_wav = WavCondition(
             wav=wav_condition, length=torch.tensor([info.n_frames]),

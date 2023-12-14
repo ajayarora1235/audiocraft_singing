@@ -19,6 +19,8 @@ import warnings
 import einops
 from num2words import num2words
 import spacy
+import madmom
+from madmom.features.chords import 
 from transformers import RobertaTokenizer, T5EncoderModel, T5Tokenizer  # type: ignore
 import torch
 from torch import nn
@@ -588,6 +590,14 @@ class InstrumentalConditioner(WaveformConditioner):
         noise = torch.randn_like(wav)
         new_wav = wav + noise * scale
         return new_wav.clamp(-1, 1)
+    
+    def _get_beat_tracking(self, wav: torch.Tensor, sample_rate: int):
+        """Get beat tracking to emphasize drum beats in conditioning"""
+        frame_rate = self.sample_rate / self._downsampling_factor()
+        # target_length = int(frame_rate * wav_length / self.sample_rate)
+
+        return frame_rate
+
 
 
     def _extract_tokens(self, wav: torch.Tensor) -> torch.Tensor:
