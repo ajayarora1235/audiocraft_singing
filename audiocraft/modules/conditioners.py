@@ -18,9 +18,11 @@ import warnings
 
 import einops
 from num2words import num2words
+import numpy as np
 import spacy
 import madmom
-from madmom.features.chords import 
+from madmom.features.beats import RNNBeatProcessor, DBNBeatTrackingProcessor
+from madmom.features.onsets import CNNOnsetProcessor, OnsetPeakPickingProcessor
 from transformers import RobertaTokenizer, T5EncoderModel, T5Tokenizer  # type: ignore
 import torch
 from torch import nn
@@ -528,7 +530,7 @@ class InstrumentalConditioner(WaveformConditioner):
     """
     def __init__(self, output_dim: int, sample_rate: int, compression_model,
                  duration: tp.Optional[float] = None, match_len_on_eval: bool = True, eval_wavs: tp.Optional[str] = None,
-                 n_eval_wavs: int = 0, cache_path: tp.Optional[tp.Union[str, Path]] = None,
+                 n_eval_wavs: int = 0, tracking_type: str = 'beat_estimates', cache_path: tp.Optional[tp.Union[str, Path]] = None,
                  device: tp.Union[torch.device, str] = 'cpu', **kwargs):
         # initialize input and output dimensions
         super().__init__(dim=4, output_dim=output_dim, device=device)
@@ -538,6 +540,7 @@ class InstrumentalConditioner(WaveformConditioner):
         self.compression_model = compression_model
         self.match_len_on_eval = match_len_on_eval
         self.duration = duration
+        self.tracking_type = tracking_type
 
         self.eval_wavs: tp.Optional[torch.Tensor] = self._load_eval_wavs(eval_wavs, n_eval_wavs)
         self.cache = None
@@ -591,13 +594,38 @@ class InstrumentalConditioner(WaveformConditioner):
         new_wav = wav + noise * scale
         return new_wav.clamp(-1, 1)
     
+    @torch.no_grad()
     def _get_beat_tracking(self, wav: torch.Tensor, sample_rate: int):
         """Get beat tracking to emphasize drum beats in conditioning"""
-        frame_rate = self.sample_rate / self._downsampling_factor()
-        # target_length = int(frame_rate * wav_length / self.sample_rate)
+        def activation_resampler(input_activation):
+            orig_fr = 100
+            orig_sr = 44100
+            new_a = np.repeat(input_activation, int(orig_sr/orig_fr))
+            new_fr = 50
+            new_sr = 32000
+            final_a = new_a[::int(new_sr/new_fr)]
+            return final_a
+        
+        def one_hot_resampler(input_times, act_length):
+            orig_frames = (100*input_times).astype(int)
+            one_hot = np.zeros(act_length, dtype=int)
+            one_hot[orig_frames] = 1
+            return activation_resampler(one_hot)
+        
+        if 'onset' in self.tracking_type:
+            featproc = CNNOnsetProcessor()
+            decode = OnsetPeakPickingProcessor(fps=100)
+        else:
+            featproc = RNNBeatProcessor()
+            decode = DBNBeatTrackingProcessor(fps=100)
 
-        return frame_rate
+        chroma = featproc(wav.cpu().numpy().flatten())
 
+        if 'estimates' in self.tracking_type:
+            chords = decode(chroma)
+            return torch.from_numpy(one_hot_resampler(chords)).unsqueeze(0).unsqueeze(0).to(self.device)
+        else:
+            return torch.from_numpy(activation_resampler(chroma)).unsqueeze(0).unsqueeze(0).to(self.device)
 
 
     def _extract_tokens(self, wav: torch.Tensor) -> torch.Tensor:
@@ -609,7 +637,30 @@ class InstrumentalConditioner(WaveformConditioner):
     def _compute_wav_embedding(self, wav: torch.Tensor, sample_rate: int) -> torch.Tensor:
         """Compute wav embedding, applying stem and chroma extraction."""
         noisy_wav = self._get_noisy_wav(wav, sample_rate)
-        return self._extract_tokens(noisy_wav)
+        codebooked_wav = self._extract_tokens(noisy_wav)
+        beat_tracking = self._get_beat_tracking(wav)
+
+        def pad_or_trim_tensor(a, b):
+            x = a.shape[2]
+            y = b.shape[2]
+
+            if y < x:
+                # Pad b
+                padding_size = x - y
+                last_value = b[:, :, -1]
+                padding = last_value.repeat(1, 1, padding_size)
+                b_padded = torch.cat([b, padding], dim=2)
+                return b_padded
+            elif y > x:
+                # Trim b
+                b_trimmed = b[:, :, :x]
+                return b_trimmed
+            else:
+                # x and y are equal, return b as is
+                return b
+
+        wav_embedding = torch.cat([codebooked_wav, pad_or_trim_tensor(codebooked_wav, beat_tracking)], dim=1)
+        return wav_embedding
 
     @torch.no_grad()
     def _get_full_tokens_for_cache(self, path: tp.Union[str, Path], x: WavCondition, idx: int) -> torch.Tensor:
