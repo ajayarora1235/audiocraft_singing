@@ -46,15 +46,14 @@ class MusicInfo(AudioInfo):
     artist: tp.Optional[str] = None  # anonymized artist id, used to ensure no overlap between splits
     key: tp.Optional[str] = None
     bpm: tp.Optional[float] = None
-    chords: tp.Optional[list] = None
+    chords: tp.Optional[str] = None
     silence: tp.Optional[str] = None
     playing_style: tp.Optional[str] = None
-    playing_feel: tp.Optional[str] = None
     rhythm: tp.Optional[str] = None
     slides: tp.Optional[str] = None
     genre: tp.Optional[str] = None
-    moods: tp.Optional[list] = None
-    keywords: tp.Optional[list] = None
+    # moods: tp.Optional[list] = None
+    # keywords: tp.Optional[list] = None
     description: tp.Optional[str] = None
     name: tp.Optional[str] = None
     instrument: tp.Optional[str] = None
@@ -237,6 +236,7 @@ class MusicDataset(InfoAudioDataset):
         # info.meta.info_path should be 'dataset/songsinger/audio_metadata.zip:/data/[track_name].json'
         music_info_path = info.meta.info_path
         bass_experiment = True
+        instrumental_path = None
         
         # if Path(music_info_path).exists():
         if music_info_path is not None:
@@ -279,6 +279,8 @@ class MusicDataset(InfoAudioDataset):
             instrumental_path = info.meta.path
 
         if bass_experiment:
+            print(instrumental_path, info.meta.path)
+            # print(instrumental_wav.shape, wav.shape)
             # Switch wav and instrumental wav
             wav, instrumental_wav = instrumental_wav, wav
             # Redefine wav_condition to be instrumental_wav[None]

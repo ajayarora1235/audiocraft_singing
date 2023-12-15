@@ -1,0 +1,5 @@
+[default]
+entity = ajayarora1235
+project = basscreator
+base_url = https://api.wandb.ai
+

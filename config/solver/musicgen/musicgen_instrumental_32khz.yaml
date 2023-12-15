@@ -6,7 +6,7 @@
 defaults:
   - musicgen/default
   - /model: lm/musicgen_lm
-  - override /conditioner: instrumental2vocal
+  - override /conditioner: instrumental2bass
   - override /dset: audio/default
   - _self_
 
@@ -49,7 +49,7 @@ logging:
   log_wandb: true
 
 wandb:
-  project: songsinger-2
+  project: basscreator
   group: group-2
   name: noise-experiment-2
 

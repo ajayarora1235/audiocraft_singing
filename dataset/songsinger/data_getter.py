@@ -19,23 +19,27 @@ paginator = s3_client.get_paginator('list_objects_v2')
 pages = paginator.paginate(Bucket=bucket_name, Prefix=directory)
 
 page_num = 0
+item_num = 0
 dataset_list = []
 for page in pages:
+    item_num = 0
     page_num += 1
     print(page_num)
 
     # Download each file from S3 to the local directory
     for obj in page.get('Contents', []):
-        key = obj['Key']
-        if key[-4:] != "json":
-            local_file_path = os.path.join(local_directory, os.path.basename(key))
-            if not os.path.isfile(local_file_path):
-                s3_client.download_file(bucket_name, key, local_file_path)
-                print(f"Downloaded: {key} to {local_file_path}")
-        else:
-            local_file_path = os.path.join('./audio_metadata/', os.path.basename(key))
-            if not os.path.isfile(local_file_path):
-                s3_client.download_file(bucket_name, key, local_file_path)
-                print(f"Downloaded: {key} to {local_file_path}")
+        item_num += 1
+        if page_num == 25 and item_num > 834: 
+            key = obj['Key']
+            if key[-4:] != "json":
+                local_file_path = os.path.join(local_directory, os.path.basename(key))
+                if not os.path.isfile(local_file_path):
+                    s3_client.download_file(bucket_name, key, local_file_path)
+                    print(f"Downloaded: {key} to {local_file_path}")
+            else:
+                local_file_path = os.path.join('./audio_metadata/', os.path.basename(key))
+                if not os.path.isfile(local_file_path):
+                    s3_client.download_file(bucket_name, key, local_file_path)
+                    print(f"Downloaded: {key} to {local_file_path}")
 
 print("All files downloaded successfully.")
