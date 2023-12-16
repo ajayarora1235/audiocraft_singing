@@ -616,7 +616,7 @@ class InstrumentalConditioner(WaveformConditioner):
             featproc = CNNOnsetProcessor()
             decode = OnsetPeakPickingProcessor(fps=100)
         else:
-            featproc = RNNBeatProcessor()
+            featproc = RNNBeatProcessor(online=True)
             decode = DBNBeatTrackingProcessor(fps=100)
 
         # print(wav.shape)
