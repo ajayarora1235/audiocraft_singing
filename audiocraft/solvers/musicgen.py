@@ -194,7 +194,7 @@ class MusicGenSolver(base.StandardSolver):
 
         if name == "facebook/musicgen-melody":
             # Create a new linear layer
-            new_output_proj = nn.Linear(4, 1536)
+            new_output_proj = nn.Linear(5, 1536)
 
             # Initialize the weights of the new layer
             torch.nn.init.xavier_uniform_(new_output_proj.weight)
