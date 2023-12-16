@@ -237,6 +237,7 @@ class MusicDataset(InfoAudioDataset):
         music_info_path = info.meta.info_path
         bass_experiment = True
         instrumental_path = None
+        instrumental_wav = None
         
         # if Path(music_info_path).exists():
         if music_info_path is not None:
@@ -256,7 +257,8 @@ class MusicDataset(InfoAudioDataset):
             music_info = MusicInfo.from_dict(info_data, fields_required=False)
 
         # Replace "_vocals.wav" with "_instrumental.wav" in the path
-        suffixes = ("_vo.mp3", "_vd.mp3", "_do.mp3", "_o.mp3", "_d.mp3", "_v.mp3", "_vdo.mp3")
+        suffixes = ("_vo.mp3", "_dv.mp3", "_do.mp3", "_o.mp3", "_d.mp3", "_v.mp3", "_dvo.mp3")
+        # suffixes = ("_vo.mp3", "_vd.mp3", "_do.mp3", "_o.mp3", "_d.mp3", "_v.mp3", "_vdo.mp3")
         assert info.meta.path == music_info.meta.path
         if info.meta.path.endswith("_voc.mp3"):
             instrumental_path = info.meta.path.replace("_voc.mp3", "_inst.mp3")
@@ -275,16 +277,18 @@ class MusicDataset(InfoAudioDataset):
             wav_condition = instrumental_wav[None]
             instrumental_path = instrumental_path
         else:
+            # print('INSTRUMENTAL WAV UNDEFINED FOR', instrumental_path)
             wav_condition = wav[None]
             instrumental_path = info.meta.path
 
         if bass_experiment:
-            print(instrumental_path, info.meta.path)
+            # print(instrumental_path, info.meta.path, os.path.isfile(instrumental_path))
             # print(instrumental_wav.shape, wav.shape)
             # Switch wav and instrumental wav
             wav, instrumental_wav = instrumental_wav, wav
             # Redefine wav_condition to be instrumental_wav[None]
-            wav_condition = instrumental_wav[None]
+            wav_condition = instrumental_wav[None] if instrumental_wav is not None else wav[None]
+            # wav_condition = instrumental_wav[None]
             # Redefine info.meta.path to be instrumental path, instrumental_path to be info.meta.path
             info.meta.path, instrumental_path = instrumental_path, info.meta.path
 

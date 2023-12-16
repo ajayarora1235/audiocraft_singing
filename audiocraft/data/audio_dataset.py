@@ -414,7 +414,8 @@ class AudioDataset:
     def __getitem__(self, index: int) -> tp.Union[torch.Tensor, tp.Tuple[torch.Tensor, SegmentInfo]]:
         if self.segment_duration is None:
             file_meta = self.meta[index]
-            out, sr = audio_read(file_meta.path)
+            file_path = file_meta.path.encode('utf-8')
+            out, sr = audio_read(file_path)
             out = convert_audio(out, sr, self.sample_rate, self.channels)
             n_frames = out.shape[-1]
             segment_info = SegmentInfo(file_meta, seek_time=0., n_frames=n_frames, total_frames=n_frames,

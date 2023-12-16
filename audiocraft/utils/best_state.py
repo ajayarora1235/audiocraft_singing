@@ -79,3 +79,4 @@ class BestStateDictManager(flashy.state.StateDictSource):
         for name, sub_state in state.items():
             for k, v in sub_state.items():
                 self.states[name][k].copy_(v)
+

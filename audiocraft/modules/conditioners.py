@@ -533,7 +533,7 @@ class InstrumentalConditioner(WaveformConditioner):
                  n_eval_wavs: int = 0, tracking_type: str = 'beat_estimates', cache_path: tp.Optional[tp.Union[str, Path]] = None,
                  device: tp.Union[torch.device, str] = 'cpu', **kwargs):
         # initialize input and output dimensions
-        super().__init__(dim=4, output_dim=output_dim, device=device)
+        super().__init__(dim=5, output_dim=output_dim, device=device)
 
         self.autocast = TorchAutocast(enabled=device != 'cpu', device_type=self.device, dtype=torch.float32)
         self.sample_rate = sample_rate
@@ -716,14 +716,14 @@ class InstrumentalConditioner(WaveformConditioner):
         no_nullified_cond = x.wav.shape[-1] > 1
         if sampled_wav is not None:
             tokens = self._compute_wav_embedding(sampled_wav, self.sample_rate)
-            print(tokens.shape)
+            # print(tokens.shape)
         elif self.cache is not None and no_undefined_paths and no_nullified_cond:
             paths = [Path(p) for p in x.path if p is not None]
             tokens = self.cache.get_embed_from_cache(paths, x)
         else:
             assert all(sr == x.sample_rate[0] for sr in x.sample_rate), "All sample rates in batch should be equal."
             tokens = self._compute_wav_embedding(x.wav, x.sample_rate[0])
-            print(tokens.shape)
+            # print(tokens.shape)
 
         # if self.match_len_on_eval:
         #     B, T, C = tokens.shape
