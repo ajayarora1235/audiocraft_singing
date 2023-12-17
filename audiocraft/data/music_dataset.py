@@ -270,6 +270,9 @@ class MusicDataset(InfoAudioDataset):
         else:
             instrumental_path = None
 
+        assert instrumental_path is not None
+        assert os.path.isfile(instrumental_path)
+
         # Check if the instrumental path exists
         if instrumental_path and os.path.isfile(instrumental_path):
             instrumental_wav, sr = audio_read(instrumental_path)
