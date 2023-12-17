@@ -621,9 +621,9 @@ class InstrumentalConditioner(WaveformConditioner):
 
         # print(wav.shape)
         chroma = featproc(wav.cpu().numpy().flatten())
-
+        # print(chroma, chroma.shape, type(chroma), len(chroma.shape))
         # Check if chroma is empty
-        if chroma.size == 0 or isinstance(chroma, np.float64):
+        if chroma.size == 0 or isinstance(chroma, np.float64) or len(chroma.shape) == 0:
             # Create an empty tensor and unsqueeze it twice
             return torch.zeros((1,1,1)).to(self.device)
 
