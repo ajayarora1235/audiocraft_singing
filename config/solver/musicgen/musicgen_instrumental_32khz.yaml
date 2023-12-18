@@ -29,6 +29,8 @@ dataset:
   batch_size: 1  # 32 GPUs
   sample_on_weight: false  # Uniform sampling all the way
   sample_on_duration: false  # Uniform sampling all the way
+  valid:
+    num_samples: 2212
 
 generate:
   lm:
@@ -49,9 +51,9 @@ logging:
   log_wandb: true
 
 wandb:
-  project: basscreator
+  project: bass_full_proj
   group: group-2
-  name: bass-beats
+  name: bass-onsets-only
 
 schedule:
   lr_scheduler: cosine

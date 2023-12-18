@@ -651,7 +651,7 @@ class InstrumentalConditioner(WaveformConditioner):
             if self.input_dim == 5:
                 return chroma_onset
             else:
-                return torch.zeros((1,2,1)).to(self.device)
+                return torch.zeros((1,1,2)).to(self.device)
         if chroma_beat is not None and (chroma_beat.size == 0 or isinstance(chroma_beat, np.float64) or len(chroma_beat) == 0 or len(chroma_beat.shape) == 0):
             chroma_beat = torch.zeros((1,1,1)).to(self.device)
             if self.input_dim == 5:
