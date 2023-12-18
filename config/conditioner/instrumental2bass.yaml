@@ -25,7 +25,7 @@ conditioners:
     instrumental:
       sample_rate: ${sample_rate}
       match_len_on_eval: false
-      tracking_type: 'onset_estimates'
+      tracking_type: ''
       eval_wavs: null
       n_eval_wavs: 100
       cache_path: null

@@ -21,7 +21,7 @@ from num2words import num2words
 import numpy as np
 import spacy
 import madmom
-from madmom.features.beats import RNNBeatProcessor, DBNBeatTrackingProcessor
+from BeatNet.BeatNet import BeatNet
 from madmom.features.onsets import CNNOnsetProcessor, OnsetPeakPickingProcessor
 from transformers import RobertaTokenizer, T5EncoderModel, T5Tokenizer  # type: ignore
 import torch
@@ -528,13 +528,20 @@ class InstrumentalConditioner(WaveformConditioner):
         device (tp.Union[torch.device, str], optional): Device for the conditioner.
         **kwargs: Additional parameters for the chroma extractor.
     """
-    def __init__(self, output_dim: int, sample_rate: int, compression_model,
+    def __init__(self, input_dim: int, output_dim: int, sample_rate: int, compression_model,
                  duration: tp.Optional[float] = None, match_len_on_eval: bool = True, eval_wavs: tp.Optional[str] = None,
                  n_eval_wavs: int = 0, tracking_type: str = 'beat_estimates', cache_path: tp.Optional[tp.Union[str, Path]] = None,
                  device: tp.Union[torch.device, str] = 'cpu', **kwargs):
         # initialize input and output dimensions
-        super().__init__(dim=5, output_dim=output_dim, device=device)
+        input_dim = 4
+        if 'onset' in tracking_type:
+            input_dim += 1
+        if 'beat' in tracking_type:
+            input_dim += 1
 
+        super().__init__(dim=input_dim, output_dim=output_dim, device=device)
+
+        self.input_dim = input_dim
         self.autocast = TorchAutocast(enabled=device != 'cpu', device_type=self.device, dtype=torch.float32)
         self.sample_rate = sample_rate
         self.compression_model = compression_model
@@ -612,27 +619,47 @@ class InstrumentalConditioner(WaveformConditioner):
             one_hot[orig_frames] = 1
             return activation_resampler(one_hot)
         
+        chroma_onset = None
+        chroma_beat = None
         if 'onset' in self.tracking_type:
             featproc = CNNOnsetProcessor()
             decode = OnsetPeakPickingProcessor(fps=100)
-        else:
-            featproc = RNNBeatProcessor(online=True)
-            decode = DBNBeatTrackingProcessor(fps=100)
-
-        # print(wav.shape)
-        chroma = featproc(wav.cpu().numpy().flatten())
-        # print(chroma, chroma.shape, type(chroma), len(chroma.shape))
+            chroma_onset = featproc(wav.cpu().numpy().flatten())
+        if 'beat' in self.tracking_type:
+            estimator = BeatNet(1, mode='offline', inference_model='DBN', device=self.device)
+            chroma_beat = estimator.process(wav.numpy().flatten())[::2]/2
+            
         # Check if chroma is empty
-        if chroma.size == 0 or isinstance(chroma, np.float64) or len(chroma.shape) == 0:
-            # Create an empty tensor and unsqueeze it twice
-            return torch.zeros((1,1,1)).to(self.device)
+        if chroma_onset is not None and (chroma_onset.size == 0 or isinstance(chroma_onset, np.float64) or len(chroma_onset.shape) == 0):
+            chroma_onset = torch.zeros((1,1,1)).to(self.device)
+        if chroma_beat is not None and (chroma_beat.size == 0 or isinstance(chroma_beat, np.float64) or len(chroma_beat.shape) == 0):
+            chroma_beat = torch.zeros((1,1,1)).to(self.device)
 
         if 'estimates' in self.tracking_type:
-            # print(chroma.shape, type(chroma))
-            chords = decode(chroma)
-            return torch.from_numpy(one_hot_resampler(chords, chroma.shape[0])).unsqueeze(0).unsqueeze(-1).to(self.device)
+            chords_onset = None
+            chords_beat = None
+            if 'onset' in self.tracking_type:
+                chords_onset = decode(chroma_onset)
+                chords_onset = torch.from_numpy(one_hot_resampler(chords_onset, math.ceil(wav.shape[2]/441))).unsqueeze(0).unsqueeze(-1).to(self.device)
+            if 'beat' in self.tracking_type:
+                chords_beat = torch.from_numpy(one_hot_resampler(chroma_beat, math.ceil(wav.shape[2]/441))).unsqueeze(0).unsqueeze(-1).to(self.device)
+            
+            if chords_onset is not None and chords_beat is not None:
+                return torch.cat((chords_onset, chords_beat), dim=2)
+            elif chords_onset is not None:
+                return chords_onset
+            else:
+                return chords_beat
         else:
-            return torch.from_numpy(activation_resampler(chroma)).unsqueeze(0).unsqueeze(-1).to(self.device)
+            chroma_onset = torch.from_numpy(activation_resampler(chroma_onset)).unsqueeze(0).unsqueeze(-1).to(self.device) if chroma_onset is not None else None
+            chroma_beat = torch.from_numpy(activation_resampler(chroma_beat)).unsqueeze(0).unsqueeze(-1).to(self.device) if chroma_beat is not None else None
+
+            if chroma_onset is not None and chroma_beat is not None:
+                return torch.cat((chroma_onset, chroma_beat), dim=2)
+            elif chroma_onset is not None:
+                return chroma_onset
+            else:
+                return chroma_beat
 
 
     def _extract_tokens(self, wav: torch.Tensor) -> torch.Tensor:
@@ -645,6 +672,10 @@ class InstrumentalConditioner(WaveformConditioner):
         """Compute wav embedding, applying stem and chroma extraction."""
         noisy_wav = self._get_noisy_wav(wav, sample_rate)
         codebooked_wav = self._extract_tokens(noisy_wav)
+
+        if self.input_dim == 4:
+            return codebooked_wav
+
         beat_tracking = self._get_beat_tracking(wav)
 
         cat_dim = 1 if codebooked_wav.shape[1] == 4 else 2

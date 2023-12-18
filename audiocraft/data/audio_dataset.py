@@ -418,11 +418,6 @@ class AudioDataset:
         if self.segment_duration is None:
             file_meta = self.meta[index]
             file_path = file_meta.path
-            #print(os.path.exists(file_path))
-            #print(file_path, file_path.encode().decode('unicode_escape'))
-            #print(os.path.exists(file_path.encode().decode('unicode_escape')))
-            #print(os.path.exists('/home/user/dev/audiocraft_singing/dataset/songsinger/CharlyGarcía-NosSiguenPegandoAbajo_snippet_0_v.mp3'))
-            # print(file_path, type(file_path))
             out, sr = audio_read(file_path)
             out = convert_audio(out, sr, self.sample_rate, self.channels)
             n_frames = out.shape[-1]

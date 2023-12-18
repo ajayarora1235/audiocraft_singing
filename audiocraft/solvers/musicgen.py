@@ -25,7 +25,7 @@ from ..data.audio_utils import normalize_audio
 from ..modules.conditioners import JointEmbedCondition, SegmentWithAttributes, WavCondition
 from ..utils.cache import CachedBatchWriter, CachedBatchLoader
 from ..utils.samples.manager import SampleManager
-from ..utils.utils import get_dataset_from_loader, is_jsonable, warn_once
+from ..utils.utils import get_dataset_from_loader, is_jsonable, warn_once, dict_from_config
 
 
 class MusicGenSolver(base.StandardSolver):
@@ -192,9 +192,24 @@ class MusicGenSolver(base.StandardSolver):
             },
         }
 
+
         if name == "facebook/musicgen-melody":
             # Create a new linear layer
-            new_output_proj = nn.Linear(5, 1536)
+            sub_cfg = getattr(self.cfg, 'conditioners')
+            dict_cfg = {} if sub_cfg is None else dict_from_config(sub_cfg)
+            cond_cfg = dict_cfg['self_wav']
+            model_type = cond_cfg['model']
+            model_args = cond_cfg[model_type]
+            tracking_type = model_args['tracking_type']
+
+            input_dim = 4
+            if 'onset' in tracking_type:
+                input_dim += 1
+            if 'beat' in tracking_type:
+                input_dim += 1
+            print(input_dim)
+
+            new_output_proj = nn.Linear(input_dim, 1536)
 
             # Initialize the weights of the new layer
             torch.nn.init.xavier_uniform_(new_output_proj.weight)

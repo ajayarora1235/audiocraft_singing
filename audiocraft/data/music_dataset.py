@@ -278,31 +278,25 @@ class MusicDataset(InfoAudioDataset):
             instrumental_wav, sr = audio_read(instrumental_path)
             instrumental_wav = convert_audio(instrumental_wav, sr, self.sample_rate, self.channels)
             wav_condition = instrumental_wav[None]
-            instrumental_path = instrumental_path
+            music_info.self_wav = WavCondition(
+                    wav=wav_condition, length=torch.tensor([info.n_frames]),
+                    sample_rate=[info.sample_rate], path=[instrumental_path], seek_time=[info.seek_time])
             if bass_experiment:
                 wav, instrumental_wav = instrumental_wav, wav
                 wav_condition = instrumental_wav[None] if instrumental_wav is not None else wav[None]
-                info.meta.path, instrumental_path = instrumental_path, info.meta.path
+                # info.meta.path, instrumental_path = instrumental_path, info.meta.path
+                music_info.self_wav = WavCondition(
+                    wav=wav_condition, length=torch.tensor([info.n_frames]),
+                    sample_rate=[info.sample_rate], path=[info.meta.path], seek_time=[info.seek_time])
+
         else:
-            # print('INSTRUMENTAL WAV UNDEFINED FOR', instrumental_path)
+            print('INSTRUMENTAL WAV UNDEFINED FOR', info.meta.path, instrumental_path)
+            print(info.meta)
             wav_condition = wav[None]
-            instrumental_path = info.meta.path
-            instrumental_wav = wav
 
-        # if bass_experiment:
-            # print(instrumental_path, info.meta.path, os.path.isfile(instrumental_path))
-            # print(instrumental_wav.shape, wav.shape)
-            # Switch wav and instrumental wav
-            # wav, instrumental_wav = instrumental_wav, wav
-            # Redefine wav_condition to be instrumental_wav[None]
-            # wav_condition = instrumental_wav[None] if instrumental_wav is not None else wav[None]
-            # wav_condition = instrumental_wav[None]
-            # Redefine info.meta.path to be instrumental path, instrumental_path to be info.meta.path
-            # info.meta.path, instrumental_path = instrumental_path, info.meta.path
-
-        music_info.self_wav = WavCondition(
-            wav=wav_condition, length=torch.tensor([info.n_frames]),
-            sample_rate=[info.sample_rate], path=[instrumental_path], seek_time=[info.seek_time])
+            music_info.self_wav = WavCondition(
+                wav=wav_condition, length=torch.tensor([info.n_frames]),
+                sample_rate=[info.sample_rate], path=[info.meta.path], seek_time=[info.seek_time])
 
         for att in self.joint_embed_attributes:
             att_value = getattr(music_info, att)
