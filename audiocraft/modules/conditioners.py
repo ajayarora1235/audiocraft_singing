@@ -528,7 +528,7 @@ class InstrumentalConditioner(WaveformConditioner):
         device (tp.Union[torch.device, str], optional): Device for the conditioner.
         **kwargs: Additional parameters for the chroma extractor.
     """
-    def __init__(self, input_dim: int, output_dim: int, sample_rate: int, compression_model,
+    def __init__(self, output_dim: int, sample_rate: int, compression_model,
                  duration: tp.Optional[float] = None, match_len_on_eval: bool = True, eval_wavs: tp.Optional[str] = None,
                  n_eval_wavs: int = 0, tracking_type: str = 'beat_estimates', cache_path: tp.Optional[tp.Union[str, Path]] = None,
                  device: tp.Union[torch.device, str] = 'cpu', **kwargs):
