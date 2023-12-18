@@ -2,7 +2,7 @@ import json
 import os
 
 def check_files_exist():
-    files = ['train.jsonl', 'valid.jsonl', 'test.jsonl']
+    files = ['dataset/songsinger/train.jsonl', 'dataset/songsinger/valid.jsonl', 'dataset/songsinger/test.jsonl']
     suffixes = ("_vo.mp3", "_dv.mp3", "_do.mp3", "_o.mp3", "_d.mp3", "_v.mp3", "_dvo.mp3")
 
     for file in files:
@@ -32,3 +32,4 @@ def check_files_exist():
                     print(f"Instrumental file does not exist: {instrumental_path}")
 
 check_files_exist()
+print('all files found!')

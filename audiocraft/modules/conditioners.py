@@ -618,7 +618,22 @@ class InstrumentalConditioner(WaveformConditioner):
             one_hot = np.zeros(act_length, dtype=int)
             one_hot[orig_frames] = 1
             return activation_resampler(one_hot)
-        
+
+        def activation_resampler_torch(input_activation: torch.Tensor):
+            orig_fr = 100
+            orig_sr = 44100
+            new_a = input_activation.repeat_interleave(int(orig_sr/orig_fr))
+            new_fr = 50
+            new_sr = 32000
+            final_a = new_a[::int(new_sr/new_fr)]
+            return final_a
+
+        def one_hot_resampler_torch(input_times: torch.Tensor, act_length: int):
+            orig_frames = (100*input_times).long()
+            one_hot = torch.zeros(act_length, dtype=torch.int)
+            one_hot[orig_frames] = 1
+            return activation_resampler_torch(one_hot)
+
         chroma_onset = None
         chroma_beat = None
         if 'onset' in self.tracking_type:
@@ -627,13 +642,20 @@ class InstrumentalConditioner(WaveformConditioner):
             chroma_onset = featproc(wav.cpu().numpy().flatten())
         if 'beat' in self.tracking_type:
             estimator = BeatNet(1, mode='offline', inference_model='DBN', device=self.device)
-            chroma_beat = estimator.process(wav.numpy().flatten())[::2]/2
+            chroma_beat = estimator.process(wav.cpu().numpy().flatten())[::2]/2
+            # print(chroma_beat.shape, len(chroma_beat), type(chroma_beat))
             
         # Check if chroma is empty
         if chroma_onset is not None and (chroma_onset.size == 0 or isinstance(chroma_onset, np.float64) or len(chroma_onset.shape) == 0):
             chroma_onset = torch.zeros((1,1,1)).to(self.device)
-        if chroma_beat is not None and (chroma_beat.size == 0 or isinstance(chroma_beat, np.float64) or len(chroma_beat.shape) == 0):
+            if self.input_dim == 5:
+                return chroma_onset
+            else:
+                return torch.zeros((1,2,1)).to(self.device)
+        if chroma_beat is not None and (chroma_beat.size == 0 or isinstance(chroma_beat, np.float64) or len(chroma_beat) == 0 or len(chroma_beat.shape) == 0):
             chroma_beat = torch.zeros((1,1,1)).to(self.device)
+            if self.input_dim == 5:
+                return chroma_beat
 
         if 'estimates' in self.tracking_type:
             chords_onset = None
@@ -681,6 +703,7 @@ class InstrumentalConditioner(WaveformConditioner):
         cat_dim = 1 if codebooked_wav.shape[1] == 4 else 2
 
         def pad_or_trim_tensor(a, b):
+            # print(a.shape, b.shape)
             pad_dim = 1 if a.shape[1] != 4 else 2
 
             x = a.shape[pad_dim]

@@ -51,7 +51,7 @@ logging:
 wandb:
   project: basscreator
   group: group-2
-  name: bass-onsets
+  name: bass-beats
 
 schedule:
   lr_scheduler: cosine
