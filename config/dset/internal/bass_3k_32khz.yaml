@@ -2,7 +2,7 @@
 
 datasource:
   max_sample_rate: 32000
-  max_channels: 1
+  max_channels: 2
 
   train: dataset/songsinger/train_bass_only.jsonl
   valid: dataset/songsinger/valid_bass_only.jsonl
