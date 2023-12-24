@@ -26,11 +26,7 @@ from ..data.audio_utils import normalize_audio
 from ..modules.conditioners import JointEmbedCondition, SegmentWithAttributes, WavCondition
 from ..utils.cache import CachedBatchWriter, CachedBatchLoader
 from ..utils.samples.manager import SampleManager
-<<<<<<< HEAD
-from ..utils.utils import get_dataset_from_loader, is_jsonable, warn_once, dict_from_config
-=======
 from ..utils.utils import get_dataset_from_loader, is_jsonable, warn_once, model_hash
->>>>>>> upstream/main
 
 
 class MusicGenSolver(base.StandardSolver):
