@@ -1,0 +1,10 @@
+# @package __global__
+
+datasource:
+  max_sample_rate: 32000
+  max_channels: 1
+
+  train: dataset/songsinger/train_bass_only.jsonl
+  valid: dataset/songsinger/valid_bass_only.jsonl
+  evaluate: dataset/songsinger/test_bass_only.jsonl
+  generate: dataset/songsinger/test_bass_only.jsonl # identical to evaluate

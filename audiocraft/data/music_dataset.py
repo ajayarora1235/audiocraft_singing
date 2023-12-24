@@ -138,7 +138,7 @@ def augment_music_info_description(music_info: MusicInfo, merge_text_p: float = 
         MusicInfo: The MusicInfo with augmented textual description.
     """
     def is_valid_field(field_name: str, field_value: tp.Any) -> bool:
-        valid_field_name = field_name in ['key', 'bpm', 'genre', 'instrument', 'chords', 'silence', 'playing_style' ,'playing_feel', 'rhythm']
+        valid_field_name = field_name in ['key', 'bpm', 'genre']
         valid_field_value = field_value is not None and isinstance(field_value, (int, float, str, list))
         keep_field = random.uniform(0, 1) < drop_other_p
         return valid_field_name and valid_field_value and keep_field
@@ -258,7 +258,6 @@ class MusicDataset(InfoAudioDataset):
 
         # Replace "_vocals.wav" with "_instrumental.wav" in the path
         suffixes = ("_vo.mp3", "_dv.mp3", "_do.mp3", "_o.mp3", "_d.mp3", "_v.mp3", "_dvo.mp3")
-        # suffixes = ("_vo.mp3", "_vd.mp3", "_do.mp3", "_o.mp3", "_d.mp3", "_v.mp3", "_vdo.mp3")
         assert info.meta.path == music_info.meta.path
         if info.meta.path.endswith("_voc.mp3"):
             instrumental_path = info.meta.path.replace("_voc.mp3", "_inst.mp3")
@@ -269,9 +268,6 @@ class MusicDataset(InfoAudioDataset):
                     instrumental_path = info.meta.path[:-len(suffix)] + "_b.mp3"
         else:
             instrumental_path = None
-
-        # assert instrumental_path is not None
-        # assert os.path.isfile(instrumental_path)
 
         # Check if the instrumental path exists
         if instrumental_path and os.path.isfile(instrumental_path):
@@ -291,7 +287,6 @@ class MusicDataset(InfoAudioDataset):
 
         else:
             print('INSTRUMENTAL WAV UNDEFINED FOR', info.meta.path, instrumental_path)
-            print(info.meta)
             wav_condition = wav[None]
 
             music_info.self_wav = WavCondition(
