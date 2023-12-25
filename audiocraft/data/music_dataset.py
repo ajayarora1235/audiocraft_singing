@@ -286,7 +286,7 @@ class MusicDataset(InfoAudioDataset):
                     sample_rate=[info.sample_rate], path=[info.meta.path], seek_time=[info.seek_time])
 
         else:
-            print('INSTRUMENTAL WAV UNDEFINED FOR', info.meta.path, instrumental_path)
+            # print('INSTRUMENTAL WAV UNDEFINED FOR', info.meta.path, instrumental_path)
             wav_condition = wav[None]
 
             music_info.self_wav = WavCondition(
