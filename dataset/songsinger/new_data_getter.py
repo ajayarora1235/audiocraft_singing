@@ -16,4 +16,7 @@ s3_client.download_file(bucket_name, 'musicgen_bass/full_dataset.zip', 'full_dat
 s3_client.download_file(bucket_name, 'musicgen_bass/train_bass_final.jsonl', 'train.jsonl')
 s3_client.download_file(bucket_name, 'musicgen_bass/valid_bass_final.jsonl', 'valid.jsonl')
 s3_client.download_file(bucket_name, 'musicgen_bass/test_bass_final.jsonl', 'test.jsonl')
-s3_client.download_file(bucket_name, 'musicgen_bass/audio_metadata_norm_fin.zip', 'audio_metadata_norm.zip')
+s3_client.download_file(bucket_name, 'musicgen_bass/train_bass_final_modified.jsonl', 'train_bass_only.jsonl')
+s3_client.download_file(bucket_name, 'musicgen_bass/valid_bass_final_modified.jsonl', 'valid_bass_only.jsonl')
+s3_client.download_file(bucket_name, 'musicgen_bass/test_bass_final_modified.jsonl', 'test_bass_only.jsonl')
+s3_client.download_file(bucket_name, 'musicgen_bass/audio_metadata_norm_uncond.zip', 'audio_metadata_norm.zip')
