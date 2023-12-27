@@ -12,6 +12,7 @@ import logging
 from pathlib import Path
 import random
 import typing as tp
+from .zip import PathInZip, open_file_in_zip
 
 import torch
 
@@ -129,7 +130,7 @@ def augment_music_info_description(music_info: MusicInfo, merge_text_p: float = 
         MusicInfo: The MusicInfo with augmented textual description.
     """
     def is_valid_field(field_name: str, field_value: tp.Any) -> bool:
-        valid_field_name = field_name in ['key', 'bpm', 'genre', 'moods', 'instrument', 'keywords']
+        valid_field_name = field_name in ['key', 'bpm', 'genre']
         valid_field_value = field_value is not None and isinstance(field_value, (int, float, str, list))
         keep_field = random.uniform(0, 1) < drop_other_p
         return valid_field_name and valid_field_value and keep_field
@@ -220,11 +221,12 @@ class MusicDataset(InfoAudioDataset):
     def __getitem__(self, index):
         wav, info = super().__getitem__(index)
         info_data = info.to_dict()
-        music_info_path = Path(info.meta.path).with_suffix('.json')
+        music_info_path = info.meta.info_path
 
-        if Path(music_info_path).exists():
-            with open(music_info_path, 'r') as json_file:
-                music_data = json.load(json_file)
+        if music_info_path is not None:
+            with open_file_in_zip(music_info_path, 'r') as data:
+                result = data.read()
+                music_data = json.loads(result.decode("UTF-8"))
                 music_data.update(info_data)
                 music_info = MusicInfo.from_dict(music_data, fields_required=self.info_fields_required)
             if self.paraphraser is not None:
