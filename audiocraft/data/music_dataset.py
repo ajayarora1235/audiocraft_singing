@@ -44,8 +44,8 @@ class MusicInfo(AudioInfo):
     key: tp.Optional[str] = None
     bpm: tp.Optional[float] = None
     genre: tp.Optional[str] = None
-    moods: tp.Optional[list] = None
-    keywords: tp.Optional[list] = None
+    #moods: tp.Optional[list] = None
+    #keywords: tp.Optional[list] = None
     description: tp.Optional[str] = None
     name: tp.Optional[str] = None
     instrument: tp.Optional[str] = None

@@ -37,6 +37,7 @@ class PathInZip:
         split_path = path.split(self.INFO_PATH_SEP)
         assert len(split_path) == 2
         self.zip_path, self.file_path = split_path
+        self.file_path = self.file_path.replace("'", "_")
 
     @classmethod
     def from_paths(cls, zip_path: str, file_path: str):
