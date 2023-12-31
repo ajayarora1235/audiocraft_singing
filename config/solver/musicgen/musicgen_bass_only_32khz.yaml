@@ -51,7 +51,7 @@ logging:
   log_wandb: true
 
 wandb:
-  project: bass_final_proj
+  project: bass_uncond_test
   group: group-2
   name: bass-no-cond
 
@@ -61,3 +61,4 @@ schedule:
     warmup: 1000
     lr_min_ratio: 0.0
     cycle_length: 1.0
+    
