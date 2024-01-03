@@ -235,7 +235,7 @@ class MusicDataset(InfoAudioDataset):
         #### INSTEAD, have music_data be a json within a zipped file.
         # info.meta.info_path should be 'dataset/songsinger/audio_metadata.zip:/data/[track_name].json'
         music_info_path = info.meta.info_path
-        bass_experiment = True
+        bass_experiment = False
         instrumental_path = None
         instrumental_wav = None
         
@@ -259,8 +259,8 @@ class MusicDataset(InfoAudioDataset):
         # Replace "_vocals.wav" with "_instrumental.wav" in the path
         suffixes = ("_vo.mp3", "_dv.mp3", "_do.mp3", "_o.mp3", "_d.mp3", "_v.mp3", "_dvo.mp3")
         assert info.meta.path == music_info.meta.path
-        if info.meta.path.endswith("_voc.mp3"):
-            instrumental_path = info.meta.path.replace("_voc.mp3", "_inst.mp3")
+        if info.meta.path.endswith("_b.mp3"):
+            instrumental_path = info.meta.path.replace("_b.mp3", "_d.mp3")
         elif info.meta.path.endswith(suffixes):
             for suffix in suffixes:
                 if info.meta.path.endswith(suffix):
