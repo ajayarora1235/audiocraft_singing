@@ -810,7 +810,6 @@ class DrumConditioner(WaveformConditioner):
     Args:
         output_dim (int): Output dimension for the conditioner.
         sample_rate (int): Sample rate for the chroma extractor.
-        compression_model: Model used to convert instrumental into tokens.
         duration (int): duration used during training. This is later used for correct padding
             in case we are using chroma as prefix.
         match_len_on_eval (bool, optional): if True then all chromas are padded to the training
@@ -822,7 +821,7 @@ class DrumConditioner(WaveformConditioner):
         device (tp.Union[torch.device, str], optional): Device for the conditioner.
         **kwargs: Additional parameters for the chroma extractor.
     """
-    def __init__(self, output_dim: int, sample_rate: int, compression_model,
+    def __init__(self, output_dim: int, sample_rate: int,
                  duration: tp.Optional[float] = None, match_len_on_eval: bool = True, eval_wavs: tp.Optional[str] = None,
                  n_eval_wavs: int = 0, pt_model_dir: tp.Optional[tp.Union[str, Path]] = None, full_sep: bool = False, cache_path: tp.Optional[tp.Union[str, Path]] = None,
                  device: tp.Union[torch.device, str] = 'cpu', **kwargs):
@@ -835,7 +834,6 @@ class DrumConditioner(WaveformConditioner):
         self.input_dim = input_dim
         self.autocast = TorchAutocast(enabled=device != 'cpu', device_type=self.device, dtype=torch.float32)
         self.sample_rate = sample_rate
-        self.compression_model = compression_model
         self.match_len_on_eval = match_len_on_eval
         self.duration = duration
         self.__dict__['demucs_fullsep'] = pretrained.get_model('htdemucs').to(device)
@@ -880,7 +878,7 @@ class DrumConditioner(WaveformConditioner):
         self.onset_model.eval()
 
     def _downsampling_factor(self) -> int:
-        return self.sample_rate/self.compression_model.frame_rate
+        return 441
 
     def _load_eval_wavs(self, path: tp.Optional[str], num_samples: int) -> tp.Optional[torch.Tensor]:
         """Load pre-defined waveforms from a json.
@@ -1027,11 +1025,6 @@ class DrumConditioner(WaveformConditioner):
         odf_labels[peakPicker(odf,thresh)] = 1
         return odf_labels
 
-    def _extract_tokens(self, wav: torch.Tensor) -> torch.Tensor:
-        """Extract encodec tokens from the waveform"""
-        with self.autocast:
-            return einops.rearrange(self.compression_model.encode(wav)[0], 'b d t -> b t d')
-    
     @torch.no_grad()
     def _compute_wav_embedding(self, wav: torch.Tensor, sample_rate: int) -> torch.Tensor:
         """Compute wav embedding, applying stem and chroma extraction."""
